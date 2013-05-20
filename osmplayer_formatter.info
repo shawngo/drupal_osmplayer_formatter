@@ -1,0 +1,4 @@
+name = OSM Player Formatter
+description = Show OSM Player for text fields containing video source URLs
+package = Custom
+core = 7.x

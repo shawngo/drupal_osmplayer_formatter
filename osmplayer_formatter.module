@@ -1,0 +1,155 @@
+<?php
+/**
+ * @file osmplayer_formatter.module
+ * TODO: Enter file description here.
+ */
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function osmplayer_formatter_field_formatter_info() {
+  return array(
+    'osmplayer' => array(
+      'label' => t('OSM Player'),
+      'field types' => array('text'),
+      'settings' => array(
+        'player_type' => 'single',
+        'player_height' => '400px',
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function osmplayer_formatter_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $settings = $display['settings'];
+
+  switch ($display['type']) {
+    case 'osmplayer':
+      foreach ($items as $delta => $item) {
+        $element[$delta] = array(
+          '#theme' => 'osmplayer',
+          '#url' => $item['value'],
+          '#type' => $settings['player_type'],
+          '#height' => $settings['player_height'],
+        );
+      }
+      break;
+  }
+
+  return $element;
+}
+
+function osmplayer_formatter_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $element = array();
+
+  if ($display['type'] == 'osmplayer') {
+    $element['player_type'] = array(
+      '#title' => t('Player type'),
+      '#type' => 'select',
+      '#options' => array(
+        'single' => 'Single',
+        'playlist' => 'Playlist',
+      ),
+      '#default_value' => 'single',
+      '#required' => true,
+    );
+
+    $element['player_height'] = array(
+      '#title' => t('Player height'),
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#default_value' => '400px',
+      '#required' => true,
+    );
+  }
+
+
+
+  return $element;
+}
+
+function osmplayer_formatter_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $summary = '';
+
+  if ($display['type'] == 'osmplayer') {
+    $summary = t('Player type: @type', array('@type' => $settings['player_type']));
+    $summary .= "<br>";
+    $summary .= t('Player height: @height', array('@height' => $settings['player_height']));
+  }
+
+  return $summary;
+}
+
+/**
+ * Return a themed list of items.
+ *
+ * @param $items
+ *   An array of items to be displayed in the list.
+ *   The argument is: array("term" => $term, "definition" => $definition)
+ * @param $title
+ *   The title of the list.
+ * @return
+ *   A string containing the list output.
+ */
+function theme_osmplayer($variables = array()) {
+  drupal_add_library('system','ui');
+  $library = libraries_load("osmplayer");
+  drupal_add_js(drupal_get_path("module","osmplayer_formatter")."/osmplayer_formatter.js");
+  $video = '<video data-height="'.$variables['height'].'" data-type="'.$variables['type'].'" data-url="'.$variables['url'].'" class="osmplayer-format"></video>';
+  return $video;
+}
+
+function osmplayer_formatter_theme($existing, $type, $theme, $path) {
+  $items['osmplayer'] = array(
+    'variables' => array(
+      'height' => NULL,
+      'type' => NULL,
+      'url' => NULL,
+      'title' => NULL,
+    ),
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function osmplayer_formatter_libraries_info() {
+  // A very simple library. No changing APIs (hence, no versions), no variants.
+  // Expected to be extracted into 'sites/all/libraries/simple'.
+  $libraries['osmplayer'] = array(
+    'name' => 'OSM Player',
+    'vendor url' => 'http://mediafront.org',
+    'download url' => 'http://mediafront.org',
+    'version arguments' => array(
+      'file' => 'version.txt',
+      // Best practice: Document the actual version strings for later reference.
+      // 1.x: Version 1.0
+      'pattern' => '/(.*)/',
+      'lines' => 1,
+    ),
+    'files' => array(
+      'js' => array(
+        'bin/osmplayer.compressed.js',
+        'templates/default/osmplayer.default.js',
+      ),
+      'css' => array(
+        'jquery-ui/dark-hive/jquery-ui.css',
+        'templates/default/css/osmplayer_default.css',
+      ),
+    ),
+
+  );
+  return $libraries;
+}
